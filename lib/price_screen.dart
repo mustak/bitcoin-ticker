@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPicker;
+import 'dart:io' show Platform;
 import 'coin_data.dart' as coinData;
 
 class PriceScreen extends StatefulWidget {
@@ -21,6 +23,9 @@ class _PriceScreenState extends State<PriceScreen> {
         .toList();
 
     return DropdownButton(
+        style: TextStyle(
+          fontSize: 20,
+        ),
         value: _selectedValue,
         items: dropdownList,
         onChanged: (newValue) {
@@ -28,11 +33,29 @@ class _PriceScreenState extends State<PriceScreen> {
             _selectedValue = newValue;
           });
         });
-  }
+  } //androidSelect
+
+  Widget iOSSelect() {
+    List<Widget> dropdownList = _currencies
+        .map(
+          (e) => Text(e),
+        )
+        .toList();
+
+    return CupertinoPicker(
+      scrollController: FixedExtentScrollController(initialItem: 19),
+      children: dropdownList,
+      itemExtent: 30,
+      onSelectedItemChanged: (index) {
+        setState(() {
+          _selectedValue = _currencies[index];
+        });
+      },
+    );
+  } //iOSSelect
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _currencies = coinData.currenciesList;
   }
@@ -73,7 +96,7 @@ class _PriceScreenState extends State<PriceScreen> {
             alignment: Alignment.center,
             padding: EdgeInsets.only(bottom: 30.0),
             color: Colors.lightBlue,
-            child: androidSelect(),
+            child: Platform.isIOS ? iOSSelect() : androidSelect(),
           ),
         ],
       ),
