@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPicker;
 import 'dart:io' show Platform;
+import 'package:bitcoin_ticker/components/coin_card.dart';
 import 'coin_data.dart' as coinData;
 
 class PriceScreen extends StatefulWidget {
@@ -10,7 +11,9 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   List<String> _currencies;
+  List<CoinCard> _cryptoCards = [];
   String _selectedValue = 'USD';
+  bool updating = false;
 
   Widget androidSelect() {
     List<DropdownMenuItem<String>> dropdownList = _currencies
@@ -32,6 +35,7 @@ class _PriceScreenState extends State<PriceScreen> {
           setState(() {
             _selectedValue = newValue;
           });
+          populateCardList();
         });
   } //androidSelect
 
@@ -58,6 +62,31 @@ class _PriceScreenState extends State<PriceScreen> {
   void initState() {
     super.initState();
     _currencies = coinData.currenciesList;
+
+    populateCardList();
+  }
+
+  void populateCardList() async {
+    setState(() {
+      updating = true;
+    });
+    List<CoinCard> tList = [];
+    for (String crypto in coinData.cryptoList) {
+      String rate = await coinData.CoinData()
+          .getCoinData(coin: crypto, currency: _selectedValue);
+      tList.add(
+        CoinCard(
+          crypto: crypto,
+          currency: _selectedValue,
+          rate: rate,
+        ),
+      );
+    }
+
+    setState(() {
+      _cryptoCards = tList;
+      updating = false;
+    });
   }
 
   @override
@@ -70,27 +99,21 @@ class _PriceScreenState extends State<PriceScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 5.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  '1 BTC = ? USD',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: updating
+                ? [
+                    Center(
+                      heightFactor: 12,
+                      child: Text(
+                        'Loading...',
+                        style: TextStyle(color: Colors.black, fontSize: 30),
+                      ),
+                    )
+                  ]
+                : _cryptoCards,
           ),
+          // coinCard(coin: 'UXC', currency: _selectedValue),
           Container(
             height: 150.0,
             alignment: Alignment.center,
